@@ -37,7 +37,7 @@ double* randomGenerateArray(int size)
 
 int main()
 {
-    int x_n = 100000;
+    int x_n = 10000000;
     int h_n = 1000;
 
     double* x = randomGenerateArray(x_n);
