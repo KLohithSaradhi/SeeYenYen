@@ -27,23 +27,24 @@ double* conv_simple(double* x, double* h, int x_size, int h_size)
 double* conv_mem_access_eff(double* x, double* h, int x_size, int h_size){
     int y_size = x_size - h_size + 1;
     double* y = new double[y_size];
-
-    for ( int i = 0; i < y_size; i++){
-        y[i] = 0;
-    }
     int offset;
+
     if (h_size % 2 == 0)
         offset = h_size - 1;
     else
         offset = h_size - 1;
 
-    for (int i = 0; i < x_size; i++){
+    int initialised_so_far = 0;
 
+    for (int i = 0; i < x_size; i++){
         for ( int j = max(0, h_size - 1 - i); j < min(h_size, x_size - i);j++){
+            if (initialised_so_far < i+j-offset){
+                y[i+j - offset] = 0;
+                initialised_so_far = i+j - offset;
+            }
 
             y[i+j - offset] += x[i] * h[j];
         }
-        cout << endl;
     }
 
     return y;
