@@ -1,3 +1,4 @@
 !*.cpp
 !*.pdf
-*
+*.out
+.DS_STORE
