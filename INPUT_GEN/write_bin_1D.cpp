@@ -20,18 +20,22 @@ int main(int argc, char* argv[]){
     }
 
     ofstream writefile(filename, ios::binary);
+    cout << N * sizeof(double) << endl;
     writefile.write(reinterpret_cast<char*>(&arr), sizeof(arr));
     writefile.close();
 
 
-    double* arr2 = new double[N];
+    double* X = new double[N];
+
+    
 
     ifstream readfile(filename, ios::binary);
-    readfile.read(reinterpret_cast<char*>(&arr2), sizeof(arr2));
+    cout << sizeof(X) << endl;
+    readfile.read(reinterpret_cast<char*>(&X), sizeof(X));
     readfile.close();
 
     for (int i = 0; i < N; i++)
     {
-        cout << arr2[i] << endl;
+        cout << X[i] << endl;
     }
 }
