@@ -2,4 +2,4 @@
 !*.pdf
 *.out
 .DS_STORE
-.bin
+*.bin
