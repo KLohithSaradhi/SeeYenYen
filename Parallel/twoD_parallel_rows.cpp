@@ -1,6 +1,8 @@
 #include <iostream>
 #include <mpi.h>
 #include <math.h>
+#include <fstream>
+#include <cereal/archives/binary.hpp>
 
 using namespace std;
 
@@ -36,8 +38,10 @@ double** convolve(double** x, double** h, int x_n, int x_m, int h_n, int h_m)
 int main(int argc, char* argv[]){
     int rank, size;
 
-    int N = 8;
-    int M = 3;
+    int N = stoi(argv[1]);
+    int M = stoi(argv[3]);
+    char* X_file = argv[2];
+    char* H_file = argv[4];
 
 
     MPI_Init(&argc, &argv);
@@ -48,7 +52,28 @@ int main(int argc, char* argv[]){
 
     if (rank == 0){
 
-        // Generating X and H
+        // reading from X.bin and H.bin
+        
+
+        double* X_linear = new double[N * N];
+        double* H_linear = new double[M * M];
+
+        ifstream X_read_file(X_file, std::ios::binary);
+
+        {
+        cereal::BinaryInputArchive archive( X_read_file );
+        archive( cereal::binary_data( X_linear, sizeof(double) * N * N ) );
+        }
+
+        ifstream H_read_file(H_file, std::ios::binary);
+        {
+        cereal::BinaryInputArchive archive( H_read_file );
+        archive( cereal::binary_data( H_linear, sizeof(double) * M * M ) );
+        }
+
+
+
+        // Writing to X and H
         double** X = new double*[N];
         double** H = new double*[M];
         for (int i = 0; i < N; i++)
@@ -56,18 +81,19 @@ int main(int argc, char* argv[]){
             X[i] = new double[N];
             for (int j = 0; j < N; j++)
             {
-                X[i][j] = i + j;
+                X[i][j] = X_linear[i * N + j];
             }
         }
-
         for (int i = 0; i < M; i++)
         {
             H[i] = new double[M];
             for (int j = 0; j < M; j++)
             {
-                H[i][j] = 1.0 / 9.0;
+                H[i][j] = H_linear[i * M + j];
             }
         }
+
+        
 
         // Input is 2 power something
         
