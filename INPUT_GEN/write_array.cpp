@@ -1,6 +1,7 @@
 #include <iostream>
 #include <math.h>
 #include <fstream>
+#include <cereal/archives/binary.hpp>
 
 using namespace std;
 
@@ -8,9 +9,10 @@ int main(int argc, char* argv[]){
     int N = stoi(argv[1]);
     char* filename = argv[2];
 
-    N = pow(2, N);
+    N = pow(N, 2);
     double* arr = new double[N];
 
+    cout << N << endl;
 
     int MAXRAND = 100000;
     int LOWER = 0;
@@ -21,13 +23,9 @@ int main(int argc, char* argv[]){
     }
 
 
-    fstream writefile;
-    writefile.open(filename, ios::out);
+    ofstream write_file(filename, std::ios::binary);
+    cereal::BinaryOutputArchive archive( write_file );
 
-    for (int i = 0; i < N; i++)
-    {
-        writefile << arr[i] << endl;
-    }
-
-    writefile.close();
+    archive( cereal::binary_data( arr, sizeof(double) * N ) );
+    
 }
