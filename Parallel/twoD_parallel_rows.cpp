@@ -3,8 +3,10 @@
 #include <math.h>
 #include <fstream>
 #include <cereal/archives/binary.hpp>
+#include <chrono>
 
 using namespace std;
+using namespace std::chrono;
 
 double** convolve(double** x, double** h, int x_n, int x_m, int h_n, int h_m)
 {
@@ -54,6 +56,7 @@ int main(int argc, char* argv[]){
 
         // reading from X.bin and H.bin
         
+        auto start = high_resolution_clock::now();
 
         double* X_linear = new double[N * N];
         double* H_linear = new double[M * M];
@@ -94,8 +97,8 @@ int main(int argc, char* argv[]){
         }
 
         
-
-        // Input is 2 power something
+        auto read_end = high_resolution_clock::now();
+        
         
         int remainder = N - per_thread * size;
 
@@ -104,6 +107,10 @@ int main(int argc, char* argv[]){
             MPI_Send(&(X[i * per_thread][0]), per_thread * N, MPI_DOUBLE, i+1, 0, MPI_COMM_WORLD);
             MPI_Send(&(H[0][0]), M * M, MPI_DOUBLE, i+1, 1, MPI_COMM_WORLD);
         }
+
+        cout << "Sent X and H to all processes" << endl;
+
+        auto comm_end = high_resolution_clock::now();
 
         double** Y = new double*[N + M - 1];
         for (int i = 0; i < N + M - 1; i++)
@@ -119,6 +126,7 @@ int main(int argc, char* argv[]){
 
         double** Y_out = convolve(&X[(size - 1)*per_thread], H, per_thread, N, M, M);
         
+        auto compute_end = high_resolution_clock::now();
 
         for (int thread = 0; thread < size - 1; thread++){
             MPI_Recv(&(Y_local[0]), (per_thread + M - 1) * (N + M - 1), MPI_DOUBLE, thread+1, 2, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
@@ -139,14 +147,23 @@ int main(int argc, char* argv[]){
             }
         }
 
-        for (int i = 0; i < N + M - 1 ; i++)
-        {
-            for (int j = 0; j < N + M - 1; j++)
-            {
-                cout << Y[i][j] << " ";
-            }
-            cout << endl;
-        }
+
+        auto end = high_resolution_clock::now();
+
+        // for (int i = 0; i < N + M - 1 ; i++)
+        // {
+        //     for (int j = 0; j < N + M - 1; j++)
+        //     {
+        //         cout << Y[i][j] << " ";
+        //     }
+        //     cout << endl;
+        // }
+
+        cout << "Total time taken: " << duration_cast<milliseconds>(end - start).count() << "ms" << endl;
+        cout << "Read time taken: " << duration_cast<milliseconds>(read_end - start).count() << "ms" << endl;
+        cout << "Comm time taken: " << duration_cast<milliseconds>(comm_end - read_end).count() << "ms" << endl;
+        cout << "Compute time taken: " << duration_cast<milliseconds>(compute_end - comm_end).count() << "ms" << endl;
+        cout << "Combine time taken: " << duration_cast<milliseconds>(end - compute_end).count() << "ms" << endl;
     }
     else{
         double* X_local = new double[per_thread * N];
